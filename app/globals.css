@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+@theme {
+  --color-paper: #fff6e9;
+  --color-ink: #141414;
+  --color-muted: #5b5b5b;
+  --color-lime: #c8f135;
+  --color-violet: #7b5cff;
+  --color-pink: #ff5fa2;
+  --color-orange: #ff8a3d;
+  --color-sky: #46c2ff;
+  --color-danger: #e5383b;
+
+  --shadow-pop-sm: 3px 3px 0 var(--color-ink);
+  --shadow-pop: 4px 4px 0 var(--color-ink);
+  --shadow-pop-lg: 6px 6px 0 var(--color-ink);
+  --shadow-pop-violet: 4px 4px 0 var(--color-violet);
+  --shadow-pop-pink: 4px 4px 0 var(--color-pink);
+  --shadow-pop-danger: 4px 4px 0 var(--color-danger);
+}
+
+@theme inline {
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-bricolage), var(--font-dm-sans), sans-serif;
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background-color: var(--color-paper);
+    background-image: radial-gradient(rgb(20 20 20 / 0.07) 1px, transparent 1px);
+    background-size: 22px 22px;
+    color: var(--color-ink);
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+
+  ::selection {
+    background-color: var(--color-lime);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-violet);
+    outline-offset: 2px;
+  }
+}
+
+@utility card-pop {
+  background-color: white;
+  border: 2px solid var(--color-ink);
+  border-radius: 1.125rem;
+  box-shadow: var(--shadow-pop);
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(var(--tilt, 0deg));
+  }
+  50% {
+    transform: translateY(-8px) rotate(var(--tilt, 0deg));
+  }
+}
+
+@utility animate-float {
+  animation: float 4s ease-in-out infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
