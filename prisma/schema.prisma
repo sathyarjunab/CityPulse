@@ -1,8 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../app/generated/prisma"
@@ -10,4 +8,97 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Category {
+  MUSIC
+  WORKSHOP
+  FOOD
+  SPORTS
+  KIDS
+}
+
+// Background themes for the event card designer.
+enum CardTheme {
+  SUNSET
+  OCEAN
+  MIDNIGHT
+}
+
+// Stickers for the event card designer; mapped to emoji/SVG in the UI.
+enum Sticker {
+  PARTY
+  MUSIC
+  HEART
+  STAR
+  FIRE
+}
+
+model User {
+  id                 String     @id @default(cuid())
+  email              String     @unique // stored lower-cased
+  passwordHash       String
+  role               Role       @default(USER)
+  favoriteCategories Category[] @default([]) // empty = not picked yet
+  createdAt          DateTime   @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime   @updatedAt @db.Timestamptz(3)
+
+  reminders   Reminder[]
+  cardDesigns CardDesign[]
+
+  @@map("users")
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  title       String
+  category    Category
+  city        String
+  startsAt    DateTime @db.Timestamptz(3)
+  price       Int // whole rupees, 0 = free
+  description String
+  imageUrl    String
+  isActive    Boolean  @default(true) // events are never deleted, only deactivated
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(3)
+
+  reminders   Reminder[]
+  cardDesigns CardDesign[]
+
+  @@index([isActive, startsAt])
+  @@index([category])
+  @@index([city])
+  @@map("events")
+}
+
+model Reminder {
+  userId    String
+  eventId   String
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@id([userId, eventId])
+  @@index([eventId])
+  @@map("reminders")
+}
+
+model CardDesign {
+  userId    String
+  eventId   String
+  theme     CardTheme @default(SUNSET)
+  stickers  Sticker[] @default([]) // ordered, repeats allowed, max 3 (validated in the API)
+  updatedAt DateTime  @updatedAt @db.Timestamptz(3)
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@id([userId, eventId])
+  @@map("card_designs")
 }
