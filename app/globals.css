@@ -78,6 +78,44 @@
   }
 }
 
+@keyframes sticker-in {
+  0% {
+    opacity: 0;
+    scale: 0.2;
+  }
+  60% {
+    opacity: 1;
+    scale: 1.2;
+  }
+  100% {
+    scale: 1;
+  }
+}
+
+@keyframes sticker-out {
+  to {
+    opacity: 0;
+    scale: 0.2;
+  }
+}
+
+@utility animate-sticker-in {
+  animation: sticker-in 380ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@utility animate-sticker-out {
+  animation: sticker-out 200ms ease-in both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+    opacity: 0;
+  }
+}
+
 @keyframes float {
   0%,
   100% {
