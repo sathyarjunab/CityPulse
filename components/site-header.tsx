@@ -1,8 +1,9 @@
-import { ShieldCheck, Ticket } from "lucide-react";
+import { Heart, ShieldCheck, Ticket } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { Logo } from "@/components/logo";
+import { NavLink } from "@/components/nav-link";
 import { buttonClasses } from "@/components/ui/button";
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
@@ -27,10 +28,10 @@ async function AccountNav() {
     : null;
 
   const eventsLink = (
-    <Link href="/events" className={buttonClasses({ variant: "ghost", size: "sm", className: "max-sm:px-2" })}>
+    <NavLink href="/events">
       <Ticket className="size-4" aria-hidden />
       <span className="max-sm:sr-only">Events</span>
-    </Link>
+    </NavLink>
   );
 
   if (!user) {
@@ -50,11 +51,16 @@ async function AccountNav() {
   return (
     <nav className="flex items-center gap-1 sm:gap-2" aria-label="Main">
       {eventsLink}
-      {user.role === "ADMIN" && (
-        <Link href="/admin" className={buttonClasses({ variant: "ghost", size: "sm", className: "max-sm:px-2" })}>
+      {user.role === "ADMIN" ? (
+        <NavLink href="/admin">
           <ShieldCheck className="size-4" aria-hidden />
           <span className="max-sm:sr-only">Admin</span>
-        </Link>
+        </NavLink>
+      ) : (
+        <NavLink href="/feed" matches={["/favorites"]}>
+          <Heart className="size-4" aria-hidden />
+          <span className="max-sm:sr-only">My feed</span>
+        </NavLink>
       )}
       <span
         className="grid size-9 shrink-0 place-items-center rounded-full border-2 border-ink bg-pink font-display text-sm font-extrabold uppercase"

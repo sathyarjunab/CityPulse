@@ -36,7 +36,10 @@ const copy = {
 } satisfies Record<Mode, Record<string, string>>;
 
 type Values = { email: string; password: string };
-type AuthResponse = { token: string; user: { role: Role } };
+type AuthResponse = {
+  token: string;
+  user: { role: Role; favoriteCategories: string[] };
+};
 
 export function AuthForm({ mode }: { mode: Mode }) {
   const router = useRouter();
@@ -96,7 +99,9 @@ export function AuthForm({ mode }: { mode: Mode }) {
       setValues({ email: "", password: "" });
       setShowPassword(false);
       setPending(false);
-      router.replace(landingPathFor(body.user.role, next));
+      router.replace(
+        landingPathFor(body.user.role, next, body.user.favoriteCategories.length > 0),
+      );
       router.refresh();
     } catch {
       setFormError(
