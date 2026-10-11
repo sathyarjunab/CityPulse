@@ -12,6 +12,7 @@ import { buttonClasses } from "@/components/ui/button";
 import { apiFetch, ApiClientError } from "@/lib/api/client";
 import type { VisitorEventDTO } from "@/lib/events/types";
 import { formatEventDate, formatPrice } from "@/lib/format";
+import { useResetOnHide } from "@/lib/hooks/use-reset-on-hide";
 
 type State =
   | { status: "loading" }
@@ -27,6 +28,7 @@ type State =
 export function EventDetail({ id }: { id: string }) {
   const [state, setState] = useState<State>({ status: "loading" });
   const [attempt, setAttempt] = useState(0);
+  useResetOnHide(() => setState({ status: "loading" }));
 
   useEffect(() => {
     let ignore = false;

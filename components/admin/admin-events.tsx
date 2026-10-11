@@ -19,6 +19,7 @@ import { apiFetch, ApiClientError } from "@/lib/api/client";
 import { cn } from "@/lib/cn";
 import type { EventDTO } from "@/lib/events/types";
 import { formatEventDate, formatPrice } from "@/lib/format";
+import { useResetOnHide } from "@/lib/hooks/use-reset-on-hide";
 
 type State =
   | { status: "loading" }
@@ -29,6 +30,7 @@ export function AdminEvents() {
   const [state, setState] = useState<State>({ status: "loading" });
   const [savingIds, setSavingIds] = useState<ReadonlySet<string>>(new Set());
   const [attempt, setAttempt] = useState(0);
+  useResetOnHide(() => setState({ status: "loading" }));
 
   useEffect(() => {
     let ignore = false;

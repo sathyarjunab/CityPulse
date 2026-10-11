@@ -11,6 +11,7 @@ import { apiFetch, ApiClientError } from "@/lib/api/client";
 import { safeNextPath } from "@/lib/auth/redirect";
 import { CATEGORIES } from "@/lib/categories";
 import { cn } from "@/lib/cn";
+import { useResetOnHide } from "@/lib/hooks/use-reset-on-hide";
 
 type LoadState =
   | { status: "loading" }
@@ -26,6 +27,12 @@ export function FavoritesPicker() {
   const [selected, setSelected] = useState<Category[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  useResetOnHide(() => {
+    setState({ status: "loading" });
+    setSelected([]);
+    setError(null);
+    setPending(false);
+  });
 
   // Re-runs whenever the page is shown again, so the picks always start from what's saved.
   useEffect(() => {
@@ -40,7 +47,10 @@ export function FavoritesPicker() {
         if (ignore) return;
         setState({
           status: "error",
-          message: loadError instanceof ApiClientError ? loadError.message : "Couldn't load your picks.",
+          message:
+            loadError instanceof ApiClientError
+              ? loadError.message
+              : "Couldn't load your picks.",
         });
       });
     return () => {
@@ -51,7 +61,9 @@ export function FavoritesPicker() {
   function toggle(category: Category) {
     setError(null);
     setSelected((current) =>
-      current.includes(category) ? current.filter((value) => value !== category) : [...current, category],
+      current.includes(category)
+        ? current.filter((value) => value !== category)
+        : [...current, category],
     );
   }
 
@@ -66,12 +78,17 @@ export function FavoritesPicker() {
         method: "PUT",
         body: JSON.stringify({ categories: selected }),
       });
-      toast.success("Your feed is ready", { description: `${selected.length} ${selected.length === 1 ? "category" : "categories"} picked` });
+      toast.success("Your feed is ready", {
+        description: `${selected.length} ${selected.length === 1 ? "category" : "categories"} picked`,
+      });
       setPending(false);
       router.push(next);
     } catch (saveError) {
       toast.error("Couldn't save your picks", {
-        description: saveError instanceof ApiClientError ? saveError.message : "Try again in a moment.",
+        description:
+          saveError instanceof ApiClientError
+            ? saveError.message
+            : "Try again in a moment.",
       });
       setPending(false);
     }
@@ -120,21 +137,40 @@ export function FavoritesPicker() {
                   <Check className="size-3.5" strokeWidth={3} aria-hidden />
                 </span>
               )}
-              <span className="text-5xl transition-transform duration-200" aria-hidden>
+              <span
+                className="text-5xl transition-transform duration-200"
+                aria-hidden
+              >
                 {category.emoji}
               </span>
-              <span className="font-display text-lg font-extrabold">{category.label}</span>
+              <span className="font-display text-lg font-extrabold">
+                {category.label}
+              </span>
             </button>
           );
         })}
       </div>
 
       <div className="flex flex-col-reverse items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className={cn("flex items-center gap-1.5 text-sm font-bold", error ? "text-danger" : "text-muted")} role={error ? "alert" : undefined}>
+        <p
+          className={cn(
+            "flex items-center gap-1.5 text-sm font-bold",
+            error ? "text-danger" : "text-muted",
+          )}
+          role={error ? "alert" : undefined}
+        >
           {error && <CircleAlert className="size-4" aria-hidden />}
-          {error ?? (selected.length === 0 ? "Pick one or more." : `${selected.length} picked`)}
+          {error ??
+            (selected.length === 0
+              ? "Pick one or more."
+              : `${selected.length} picked`)}
         </p>
-        <Button size="lg" onClick={save} loading={pending} disabled={state.status === "loading"}>
+        <Button
+          size="lg"
+          onClick={save}
+          loading={pending}
+          disabled={state.status === "loading"}
+        >
           {pending ? "Saving…" : isFirstTime ? "Build my feed" : "Save picks"}
           {!pending && <ArrowRight className="size-5" aria-hidden />}
         </Button>

@@ -126,16 +126,18 @@ function DesignerEditor({ event }: { event: VisitorEventDTO }) {
     let ignore = false;
     apiFetch<{ design: CardDesignDTO }>(url)
       .then(({ design }) => {
-        if (ignore || inFlight.current || queued.current) return;
-        lastDesign.current = design;
-        setTheme(design.theme);
-        setPlaced(
-          design.stickers.map((sticker) => ({
-            key: nextKey.current++,
-            sticker,
-            leaving: false,
-          })),
-        );
+        if (ignore) return;
+        if (!inFlight.current && !queued.current) {
+          lastDesign.current = design;
+          setTheme(design.theme);
+          setPlaced(
+            design.stickers.map((sticker) => ({
+              key: nextKey.current++,
+              sticker,
+              leaving: false,
+            })),
+          );
+        }
         setLoad({ status: "ready" });
       })
       .catch((error: unknown) => {

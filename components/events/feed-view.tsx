@@ -6,11 +6,17 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { Category } from "@/app/generated/prisma/enums";
 import { CategoryBadge } from "@/components/category-badge";
-import { EmptyState, ErrorState, EventGrid, EventGridSkeleton } from "@/components/events/event-grid";
+import {
+  EmptyState,
+  ErrorState,
+  EventGrid,
+  EventGridSkeleton,
+} from "@/components/events/event-grid";
 import { Pagination } from "@/components/events/pagination";
 import { buttonClasses } from "@/components/ui/button";
 import { apiFetch, ApiClientError } from "@/lib/api/client";
 import type { EventPageDTO } from "@/lib/events/types";
+import { useResetOnHide } from "@/lib/hooks/use-reset-on-hide";
 
 type FeedDTO = EventPageDTO & { favoriteCategories: Category[] };
 
@@ -29,8 +35,12 @@ export function FeedView() {
   const page = Number.isInteger(rawPage) && rawPage > 1 ? rawPage : 1;
   const queryKey = page > 1 ? `page=${page}` : "";
 
-  const [state, setState] = useState<LoadState>({ status: "loading", key: null });
+  const [state, setState] = useState<LoadState>({
+    status: "loading",
+    key: null,
+  });
   const [attempt, setAttempt] = useState(0);
+  useResetOnHide(() => setState({ status: "loading", key: null }));
 
   useEffect(() => {
     let ignore = false;
@@ -47,7 +57,10 @@ export function FeedView() {
         setState({
           status: "error",
           key: queryKey,
-          message: error instanceof ApiClientError ? error.message : "Couldn't load your feed.",
+          message:
+            error instanceof ApiClientError
+              ? error.message
+              : "Couldn't load your feed.",
         });
       });
     return () => {
@@ -59,7 +72,7 @@ export function FeedView() {
     router.push(next > 1 ? `${pathname}?page=${next}` : pathname);
   }
 
-  if (state.status === "loading" || (state.status === "error" && state.key !== queryKey)) {
+  if (state.status === "loading" || state.key !== queryKey) {
     return <EventGridSkeleton />;
   }
 
@@ -89,7 +102,8 @@ export function FeedView() {
           </Link>
         }
       >
-        Choose a few favourite categories and your feed fills up with events you&apos;ll actually want to go to.
+        Choose a few favourite categories and your feed fills up with events
+        you&apos;ll actually want to go to.
       </EmptyState>
     );
   }
@@ -101,7 +115,10 @@ export function FeedView() {
         {data.favoriteCategories.map((category) => (
           <CategoryBadge key={category} category={category} />
         ))}
-        <Link href={EDIT_PICKS_HREF} className={buttonClasses({ variant: "ghost", size: "sm" })}>
+        <Link
+          href={EDIT_PICKS_HREF}
+          className={buttonClasses({ variant: "ghost", size: "sm" })}
+        >
           <Pencil className="size-4" aria-hidden />
           Edit picks
         </Link>
@@ -116,7 +133,10 @@ export function FeedView() {
               <Link href="/events" className={buttonClasses()}>
                 Browse all events
               </Link>
-              <Link href={EDIT_PICKS_HREF} className={buttonClasses({ variant: "secondary" })}>
+              <Link
+                href={EDIT_PICKS_HREF}
+                className={buttonClasses({ variant: "secondary" })}
+              >
                 Add more categories
               </Link>
             </>
@@ -129,10 +149,16 @@ export function FeedView() {
       ) : (
         <>
           <p className="font-bold" aria-live="polite">
-            {data.total === 1 ? "1 upcoming event" : `${data.total} upcoming events`}
+            {data.total === 1
+              ? "1 upcoming event"
+              : `${data.total} upcoming events`}
           </p>
-          <EventGrid events={data.events} authenticated={data.authenticated} busy={state.key !== queryKey} />
-          <Pagination page={data.page} totalPages={data.totalPages} onPageChange={goToPage} />
+          <EventGrid events={data.events} authenticated={data.authenticated} />
+          <Pagination
+            page={data.page}
+            totalPages={data.totalPages}
+            onPageChange={goToPage}
+          />
         </>
       )}
     </div>

@@ -45,7 +45,9 @@ export async function listUpcomingEvents({
     }),
   };
 
-  const [total, events] = await prisma.$transaction([
+  // Run in parallel rather than in a transaction: a read doesn't need one, and opening a
+  // transaction can time out (P2028) while a suspended serverless database wakes up.
+  const [total, events] = await Promise.all([
     prisma.event.count({ where }),
     prisma.event.findMany({
       where,

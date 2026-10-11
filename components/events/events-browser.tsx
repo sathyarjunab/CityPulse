@@ -4,13 +4,19 @@ import { Search, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { Category } from "@/app/generated/prisma/enums";
-import { EmptyState, ErrorState, EventGrid, EventGridSkeleton } from "@/components/events/event-grid";
+import {
+  EmptyState,
+  ErrorState,
+  EventGrid,
+  EventGridSkeleton,
+} from "@/components/events/event-grid";
 import { Pagination } from "@/components/events/pagination";
 import { Button } from "@/components/ui/button";
 import { apiFetch, ApiClientError } from "@/lib/api/client";
 import { CATEGORIES, CATEGORY_META } from "@/lib/categories";
 import { cn } from "@/lib/cn";
 import type { EventPageDTO } from "@/lib/events/types";
+import { useResetOnHide } from "@/lib/hooks/use-reset-on-hide";
 
 type Filters = { category?: Category; city?: string; q?: string; page: number };
 
@@ -25,7 +31,10 @@ function readFilters(params: URLSearchParams): Filters {
   const category = params.get("category");
   const page = Number(params.get("page"));
   return {
-    category: category && category in CATEGORY_META ? (category as Category) : undefined,
+    category:
+      category && category in CATEGORY_META
+        ? (category as Category)
+        : undefined,
     city: params.get("city")?.trim() || undefined,
     q: params.get("q")?.trim() || undefined,
     page: Number.isInteger(page) && page > 1 ? page : 1,
@@ -49,8 +58,12 @@ export function EventsBrowser() {
   const filters = readFilters(searchParams);
   const queryKey = toQueryString(filters);
 
-  const [state, setState] = useState<LoadState>({ status: "loading", key: null });
+  const [state, setState] = useState<LoadState>({
+    status: "loading",
+    key: null,
+  });
   const [attempt, setAttempt] = useState(0);
+  useResetOnHide(() => setState({ status: "loading", key: null }));
   const [cities, setCities] = useState<string[]>([]);
   const [searchText, setSearchText] = useState(filters.q ?? "");
   const [syncedQ, setSyncedQ] = useState(filters.q ?? "");
@@ -86,7 +99,10 @@ export function EventsBrowser() {
   useEffect(() => {
     const q = searchText.trim();
     if (q === (filters.q ?? "")) return;
-    const timer = setTimeout(() => setFilter({ q: q || undefined }), SEARCH_DELAY_MS);
+    const timer = setTimeout(
+      () => setFilter({ q: q || undefined }),
+      SEARCH_DELAY_MS,
+    );
     return () => clearTimeout(timer);
   });
 
@@ -113,7 +129,10 @@ export function EventsBrowser() {
         setState({
           status: "error",
           key: queryKey,
-          message: error instanceof ApiClientError ? error.message : "Couldn't load events.",
+          message:
+            error instanceof ApiClientError
+              ? error.message
+              : "Couldn't load events.",
         });
       });
     return () => {
@@ -123,14 +142,20 @@ export function EventsBrowser() {
 
   const hasFilters = Boolean(filters.category || filters.city || filters.q);
   const isStale = state.key !== queryKey;
-  const cityOptions = filters.city && !cities.includes(filters.city) ? [filters.city, ...cities] : cities;
+  const cityOptions =
+    filters.city && !cities.includes(filters.city)
+      ? [filters.city, ...cities]
+      : cities;
 
   return (
     <div className="grid gap-8">
       <section className="card-pop grid gap-4 p-4 sm:p-5" aria-label="Filters">
         <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px]">
           <div className="relative">
-            <Search className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted" aria-hidden />
+            <Search
+              className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted"
+              aria-hidden
+            />
             <input
               type="search"
               value={searchText}
@@ -153,7 +178,9 @@ export function EventsBrowser() {
           </div>
           <select
             value={filters.city ?? ""}
-            onChange={(event) => setFilter({ city: event.target.value || undefined })}
+            onChange={(event) =>
+              setFilter({ city: event.target.value || undefined })
+            }
             aria-label="City"
             className="h-12 w-full cursor-pointer rounded-xl border-2 border-ink bg-white px-4 text-base font-medium outline-none transition-shadow focus:shadow-pop-violet"
           >
@@ -166,8 +193,17 @@ export function EventsBrowser() {
           </select>
         </div>
 
-        <div className="flex flex-wrap gap-2 pt-1 pb-1" role="radiogroup" aria-label="Category">
-          <CategoryChip selected={!filters.category} onSelect={() => setFilter({ category: undefined })} label="All" emoji="✨" />
+        <div
+          className="flex flex-wrap gap-2 pt-1 pb-1"
+          role="radiogroup"
+          aria-label="Category"
+        >
+          <CategoryChip
+            selected={!filters.category}
+            onSelect={() => setFilter({ category: undefined })}
+            label="All"
+            emoji="✨"
+          />
           {CATEGORIES.map((category) => (
             <CategoryChip
               key={category.value}
@@ -185,7 +221,10 @@ export function EventsBrowser() {
         <div className="flex min-h-9 flex-wrap items-center justify-between gap-3">
           <p className="font-bold" aria-live="polite">
             {state.status === "ready" &&
-              (state.data.total === 1 ? "1 event" : `${state.data.total} events`)}
+              !isStale &&
+              (state.data.total === 1
+                ? "1 event"
+                : `${state.data.total} events`)}
           </p>
           {hasFilters && (
             <Button variant="ghost" size="sm" onClick={clearFilters}>
@@ -195,25 +234,21 @@ export function EventsBrowser() {
           )}
         </div>
 
-        {state.status === "loading" && <EventGridSkeleton />}
+        {isStale && <EventGridSkeleton />}
 
-        {state.status === "error" &&
-          (isStale ? (
-            <EventGridSkeleton />
-          ) : (
-            <ErrorState
-              message={state.message}
-              onRetry={() => {
-                setState({ status: "loading", key: null });
-                setAttempt((count) => count + 1);
-              }}
-            />
-          ))}
+        {state.status === "error" && !isStale && (
+          <ErrorState
+            message={state.message}
+            onRetry={() => {
+              setState({ status: "loading", key: null });
+              setAttempt((count) => count + 1);
+            }}
+          />
+        )}
 
-        {state.status === "ready" && (
+        {state.status === "ready" && !isStale && (
           <ResultsView
             data={state.data}
-            busy={isStale}
             hasFilters={hasFilters}
             onClear={clearFilters}
             onPageChange={goToPage}
@@ -226,13 +261,11 @@ export function EventsBrowser() {
 
 function ResultsView({
   data,
-  busy,
   hasFilters,
   onClear,
   onPageChange,
 }: {
   data: EventPageDTO;
-  busy: boolean;
   hasFilters: boolean;
   onClear: () => void;
   onPageChange: (page: number) => void;
@@ -250,7 +283,11 @@ function ResultsView({
       );
     }
     return hasFilters ? (
-      <EmptyState emoji="🔍" title="No events match" action={<Button onClick={onClear}>Clear filters</Button>}>
+      <EmptyState
+        emoji="🔍"
+        title="No events match"
+        action={<Button onClick={onClear}>Clear filters</Button>}
+      >
         Try another city, a different category or a shorter search.
       </EmptyState>
     ) : (
@@ -262,8 +299,12 @@ function ResultsView({
 
   return (
     <>
-      <EventGrid events={data.events} authenticated={data.authenticated} busy={busy} />
-      <Pagination page={data.page} totalPages={data.totalPages} onPageChange={onPageChange} />
+      <EventGrid events={data.events} authenticated={data.authenticated} />
+      <Pagination
+        page={data.page}
+        totalPages={data.totalPages}
+        onPageChange={onPageChange}
+      />
     </>
   );
 }
@@ -289,7 +330,9 @@ function CategoryChip({
       onClick={onSelect}
       className={cn(
         "inline-flex shrink-0 items-center gap-1.5 rounded-full border-2 border-ink px-4 py-2 text-sm font-bold transition-[transform,box-shadow,background-color] duration-150",
-        selected ? `${selectedClassName} -translate-x-0.5 -translate-y-0.5 shadow-pop-sm` : "bg-white hover:bg-paper",
+        selected
+          ? `${selectedClassName} -translate-x-0.5 -translate-y-0.5 shadow-pop-sm`
+          : "bg-white hover:bg-paper",
       )}
     >
       <span aria-hidden>{emoji}</span>

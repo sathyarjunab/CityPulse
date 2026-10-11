@@ -7,6 +7,7 @@ import { EventForm } from "@/components/admin/event-form";
 import { Button, buttonClasses } from "@/components/ui/button";
 import { apiFetch, ApiClientError } from "@/lib/api/client";
 import type { EventDTO } from "@/lib/events/types";
+import { useResetOnHide } from "@/lib/hooks/use-reset-on-hide";
 
 type State =
   | { status: "loading" }
@@ -17,6 +18,7 @@ type State =
 export function EditEvent({ id }: { id: string }) {
   const [state, setState] = useState<State>({ status: "loading" });
   const [attempt, setAttempt] = useState(0);
+  useResetOnHide(() => setState({ status: "loading" }));
 
   // Re-runs whenever the page becomes visible again, so the form always starts from saved data.
   useEffect(() => {

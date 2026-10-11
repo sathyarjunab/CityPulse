@@ -10,14 +10,12 @@ const GRID = "grid gap-6 sm:grid-cols-2 lg:grid-cols-3";
 export function EventGrid({
   events,
   authenticated,
-  busy = false,
 }: {
   events: VisitorEventDTO[];
   authenticated: boolean;
-  busy?: boolean;
 }) {
   return (
-    <ul className={cn(GRID, "transition-opacity duration-200", busy && "opacity-50")} aria-busy={busy || undefined}>
+    <ul className={GRID}>
       {events.map((event) => (
         <li key={event.id} className="flex">
           <EventCard event={event} authenticated={authenticated} />
@@ -66,14 +64,25 @@ export function EmptyState({
       </span>
       <h2 className="text-2xl font-extrabold">{title}</h2>
       <p className="max-w-md text-muted">{children}</p>
-      {action && <div className="mt-2 flex flex-wrap justify-center gap-3">{action}</div>}
+      {action && (
+        <div className="mt-2 flex flex-wrap justify-center gap-3">{action}</div>
+      )}
     </div>
   );
 }
 
-export function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
+export function ErrorState({
+  message,
+  onRetry,
+}: {
+  message: string;
+  onRetry: () => void;
+}) {
   return (
-    <div role="alert" className="card-pop grid justify-items-center gap-3 px-6 py-12 text-center">
+    <div
+      role="alert"
+      className="card-pop grid justify-items-center gap-3 px-6 py-12 text-center"
+    >
       <CircleAlert className="size-10 text-danger" aria-hidden />
       <h2 className="text-2xl font-extrabold">Something went sideways</h2>
       <p className="max-w-sm text-muted">{message}</p>
