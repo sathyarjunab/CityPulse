@@ -108,6 +108,97 @@ The seed creates 15 events across all 5 categories and 5 cities (Coimbatore, Che
 
 Dates are relative to when the seed runs, so "upcoming" events stay upcoming. Prices range from free to ₹1,50,000. Try the filters with **Music + Coimbatore + "night"**.
 
+## Design notes
+
+### Database structure
+
+```mermaid
+erDiagram
+    USER ||--o{ REMINDER : sets
+    USER ||--o{ CARD_DESIGN : designs
+    EVENT ||--o{ REMINDER : has
+    EVENT ||--o{ CARD_DESIGN : has
+
+    USER {
+        string id PK
+        string email UK "stored lower-cased"
+        string passwordHash "bcrypt"
+        enum role "USER | ADMIN"
+        enum[] favoriteCategories
+    }
+    EVENT {
+        string id PK
+        string title
+        enum category "MUSIC | WORKSHOP | FOOD | SPORTS | KIDS"
+        string city
+        timestamptz startsAt
+        int price "whole rupees, 0 = free"
+        string description
+        string imageUrl
+        boolean isActive
+    }
+    REMINDER {
+        string userId PK, FK
+        string eventId PK, FK
+        timestamptz createdAt
+    }
+    CARD_DESIGN {
+        string userId PK, FK
+        string eventId PK, FK
+        enum theme "SUNSET | OCEAN | MIDNIGHT"
+        enum[] stickers "max 3, order kept, repeats allowed"
+    }
+```
+
+Why it's designed this way:
+
+- **Enums for fixed lists.** Category, role, theme and sticker are Postgres enums, so the database itself rejects bad values.
+- **Favourites as an enum array on `User`.** There are only 5 categories, so an array is simpler than a join table. The feed is just `category IN user.favoriteCategories`.
+- **Composite primary keys `(userId, eventId)`** on `Reminder` and `CardDesign`. A user can have only one reminder and one card per event, so "Remind me" and saving a card are idempotent upserts.
+- **Events are never deleted.** The `isActive` flag hides them instead, as the brief requires. Deleting a user cascades to their reminders and cards.
+- **`price` is whole rupees as an `Int`,** so there's no floating-point error. **`startsAt` is a `timestamptz`,** stored in UTC and shown in IST.
+
+### How the filter query works
+
+`GET /api/events` builds a single Prisma `where` clause, so all filters combine with AND:
+
+```ts
+{
+  isActive: true,
+  startsAt: { gte: now },                                   // upcoming only
+  category,                                                 // optional, exact enum match
+  city: { equals: city, mode: "insensitive" },              // optional
+  OR: [                                                     // optional text search
+    { title:       { contains: q, mode: "insensitive" } },
+    { description: { contains: q, mode: "insensitive" } },
+  ],
+}
+// orderBy: [{ startsAt: "asc" }, { id: "asc" }]   skip/take for pagination, plus a count for totalPages
+```
+
+The count and the page are fetched in one transaction.
+
+**Indexes.** These already exist:
+
+- `(isActive, startsAt)` covers the base filter and the sort.
+- `category` and `city` cover those filters.
+
+At scale I would add:
+
+1. **`(isActive, category, startsAt)`**, so a category filter, the date range and the sort are all served by one index.
+2. **A `pg_trgm` GIN index on `title` and `description`,** because `ILIKE '%night%'` can't use a normal B-tree index.
+3. **An index on `lower(city)`,** or keep comparing exact values, since cities are already saved title-cased ("coimbatore" becomes "Coimbatore").
+
+### Passwords and admin protection
+
+- **Passwords** are hashed with **bcrypt** (`bcryptjs`, cost 10) and only the hash is stored. Login gives the same "Wrong email or password" message whether the email or the password is wrong.
+- **Sessions** use a **JWT** (HS256, signed with `JWT_SECRET`, valid 7 days) that carries the user id and role. The token is returned in the response for `Authorization: Bearer` clients, and also set as an **httpOnly, SameSite=Lax** cookie, which is `Secure` over HTTPS, for the web app.
+- **Roles** are fixed at the source: signup always creates a `USER`, and the single `ADMIN` exists only through the seed.
+- **Admin pages and APIs** are checked on the server at three layers:
+  1. `proxy.ts` redirects logged-out visitors to login and non-admins to `/events` before the page renders.
+  2. The admin layout runs `requireAdminSession()` on the server again before showing any admin page.
+  3. Every `/api/admin/*` handler calls `requireAdmin()`, which verifies the JWT signature, expiry and role, and returns `401` or `403` otherwise. So the API is safe even if it's called directly.
+
 ## API reference
 
 All endpoints return JSON.
