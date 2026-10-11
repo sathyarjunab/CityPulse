@@ -27,11 +27,13 @@ This starts two containers:
 
 The first build takes a few minutes. After that, `docker compose up` starts in seconds.
 
-| Task | Command |
-| --- | --- |
-| Stop | `docker compose down` |
-| Stop and wipe all data (fresh sample data on next start) | `docker compose down -v` |
-| Rebuild after code changes | `docker compose up --build` |
+| Task | Command | npm shortcut |
+| --- | --- | --- |
+| Build and start | `docker compose up --build` | `npm run docker:up` |
+| Stop | `docker compose down` | `npm run docker:down` |
+| Stop and wipe all data (fresh sample data on next start) | `docker compose down -v` | `npm run docker:reset` |
+
+The npm shortcuts need Node.js. The plain `docker compose` commands work with only Docker installed.
 
 > The Docker setup uses local review values for `JWT_SECRET` and the admin password (see `docker-compose.yml`). Change them for any real deployment.
 
@@ -292,3 +294,6 @@ proxy.ts          route protection (Next.js 16 "proxy", formerly middleware)
 | `npm run db:migrate` | Create and apply a migration (development) |
 | `npm run db:seed` | Seed the admin account and sample events |
 | `npm run db:studio` | Open Prisma Studio |
+| `npm run docker:up` | Build and start the app and database in Docker |
+| `npm run docker:down` | Stop the Docker containers |
+| `npm run docker:reset` | Stop the containers and delete the database volume |
