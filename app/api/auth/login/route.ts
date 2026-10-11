@@ -4,7 +4,8 @@ import { apiError, readJson, validationError } from "@/lib/api/response";
 import { setAuthCookie, toPublicUser } from "@/lib/auth/session";
 import { signToken } from "@/lib/auth/token";
 import { prisma } from "@/lib/prisma";
-import { firstFieldErrors, loginSchema } from "@/lib/validation/auth";
+import { loginSchema } from "@/lib/validation/auth";
+import { firstFieldErrors } from "@/lib/validation/errors";
 
 export async function POST(request: NextRequest) {
   const parsed = loginSchema.safeParse(await readJson(request));

@@ -1,5 +1,6 @@
 import "server-only";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import type { NextRequest, NextResponse } from "next/server";
 import type { User } from "@/app/generated/prisma/client";
 import { forbidden, unauthorized } from "@/lib/api/response";
@@ -57,4 +58,11 @@ export async function requireAdmin(request: NextRequest): Promise<AuthResult> {
 export async function getSession(): Promise<TokenPayload | null> {
   const cookieStore = await cookies();
   return verifyToken(cookieStore.get(AUTH_COOKIE)?.value);
+}
+
+export async function requireAdminSession(next = "/admin"): Promise<TokenPayload> {
+  const session = await getSession();
+  if (!session) redirect(`/login?next=${encodeURIComponent(next)}`);
+  if (session.role !== "ADMIN") redirect("/events");
+  return session;
 }

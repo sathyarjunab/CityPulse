@@ -16,6 +16,7 @@
   --shadow-pop-lg: 6px 6px 0 var(--color-ink);
   --shadow-pop-violet: 4px 4px 0 var(--color-violet);
   --shadow-pop-pink: 4px 4px 0 var(--color-pink);
+  --shadow-pop-lime: 4px 4px 0 var(--color-lime);
   --shadow-pop-danger: 4px 4px 0 var(--color-danger);
 }
 

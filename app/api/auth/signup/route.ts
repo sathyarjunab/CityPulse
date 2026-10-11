@@ -5,7 +5,8 @@ import { apiError, readJson, validationError } from "@/lib/api/response";
 import { setAuthCookie, toPublicUser } from "@/lib/auth/session";
 import { signToken } from "@/lib/auth/token";
 import { prisma } from "@/lib/prisma";
-import { firstFieldErrors, signupSchema } from "@/lib/validation/auth";
+import { signupSchema } from "@/lib/validation/auth";
+import { firstFieldErrors } from "@/lib/validation/errors";
 
 const emailTaken = () =>
   apiError(409, "EMAIL_TAKEN", "That email is already registered.", {

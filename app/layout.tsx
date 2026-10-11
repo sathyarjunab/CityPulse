@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, DM_Sans } from "next/font/google";
+import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 
 const bricolage = Bricolage_Grotesque({
@@ -26,7 +27,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${bricolage.variable} ${dmSans.variable}`}>
-      <body className="flex min-h-dvh flex-col font-sans antialiased">{children}</body>
+      <body className="flex min-h-dvh flex-col font-sans antialiased">
+        {children}
+        <Toaster />
+      </body>
     </html>
   );
 }

@@ -29,6 +29,7 @@ export function LogoutButton() {
     <Button
       variant="secondary"
       size="sm"
+      className="max-sm:px-2.5"
       onClick={logout}
       loading={pending}
       title={failed ? "Couldn't log out. Try again." : undefined}

@@ -10,11 +10,8 @@ import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import type { ApiErrorBody } from "@/lib/api/response";
 import { landingPathFor } from "@/lib/auth/redirect";
-import {
-  firstFieldErrors,
-  loginSchema,
-  signupSchema,
-} from "@/lib/validation/auth";
+import { loginSchema, signupSchema } from "@/lib/validation/auth";
+import { firstFieldErrors } from "@/lib/validation/errors";
 
 type Mode = "login" | "signup";
 
@@ -95,9 +92,12 @@ export function AuthForm({ mode }: { mode: Mode }) {
         return;
       }
 
+      // Next keeps visited pages mounted (hidden), so clear the form before leaving.
+      setValues({ email: "", password: "" });
+      setShowPassword(false);
+      setPending(false);
       router.replace(landingPathFor(body.user.role, next));
       router.refresh();
-      setPending(false);
     } catch {
       setFormError(
         "Couldn't reach CityPulse. Check your connection and try again.",

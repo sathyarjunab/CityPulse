@@ -27,7 +27,7 @@ async function AccountNav() {
     : null;
 
   const eventsLink = (
-    <Link href="/events" className={buttonClasses({ variant: "ghost", size: "sm" })}>
+    <Link href="/events" className={buttonClasses({ variant: "ghost", size: "sm", className: "max-sm:px-2" })}>
       <Ticket className="size-4" aria-hidden />
       <span className="max-sm:sr-only">Events</span>
     </Link>
@@ -35,7 +35,7 @@ async function AccountNav() {
 
   if (!user) {
     return (
-      <nav className="flex items-center gap-2" aria-label="Main">
+      <nav className="flex items-center gap-1 sm:gap-2" aria-label="Main">
         {eventsLink}
         <Link href="/login" className={buttonClasses({ size: "sm" })}>
           Log in
@@ -48,10 +48,10 @@ async function AccountNav() {
   }
 
   return (
-    <nav className="flex items-center gap-2" aria-label="Main">
+    <nav className="flex items-center gap-1 sm:gap-2" aria-label="Main">
       {eventsLink}
       {user.role === "ADMIN" && (
-        <Link href="/admin" className={buttonClasses({ variant: "ghost", size: "sm" })}>
+        <Link href="/admin" className={buttonClasses({ variant: "ghost", size: "sm", className: "max-sm:px-2" })}>
           <ShieldCheck className="size-4" aria-hidden />
           <span className="max-sm:sr-only">Admin</span>
         </Link>
