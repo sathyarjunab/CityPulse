@@ -17,11 +17,12 @@ export function toPublicUser(user: User): PublicUser {
   };
 }
 
-export function setAuthCookie(response: NextResponse, token: string) {
+// Secure only over HTTPS, so the cookie also works when the production build runs on http://localhost (e.g. Docker).
+export function setAuthCookie(request: NextRequest, response: NextResponse, token: string) {
   response.cookies.set(AUTH_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: request.nextUrl.protocol === "https:",
     path: "/",
     maxAge: TOKEN_TTL_SECONDS,
   });

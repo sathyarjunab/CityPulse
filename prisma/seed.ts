@@ -194,6 +194,12 @@ async function main() {
     create: { email, passwordHash, role: "ADMIN" },
   });
 
+  // `--if-empty` (used by the Docker container on every start) keeps existing data intact.
+  if (process.argv.includes("--if-empty") && (await prisma.event.count()) > 0) {
+    console.log(`Admin ${email} ready; events already present, skipping sample data.`);
+    return;
+  }
+
   // Recreate events so the seed can be re-run (reminders/card designs cascade).
   await prisma.event.deleteMany();
   await prisma.event.createMany({ data: events });

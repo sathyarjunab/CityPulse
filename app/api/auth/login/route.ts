@@ -21,6 +21,6 @@ export async function POST(request: NextRequest) {
 
   const token = await signToken({ userId: user.id, role: user.role });
   const response = NextResponse.json({ token, user: toPublicUser(user) });
-  setAuthCookie(response, token);
+  setAuthCookie(request, response, token);
   return response;
 }

@@ -1,0 +1,32 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: citypulse
+      POSTGRES_PASSWORD: citypulse
+      POSTGRES_DB: citypulse
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U citypulse -d citypulse"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  app:
+    build: .
+    image: citypulse:latest
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://citypulse:citypulse@db:5432/citypulse?schema=public
+      # Local review values only. Use your own secret and admin password anywhere real.
+      JWT_SECRET: citypulse-local-review-secret-please-change-in-production
+      ADMIN_EMAIL: Test@gmail.com
+      ADMIN_PASSWORD: Test@123
+    ports:
+      - "3000:3000"
+
+volumes:
+  db-data:
